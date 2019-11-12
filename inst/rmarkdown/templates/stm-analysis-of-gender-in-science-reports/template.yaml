@@ -1,0 +1,4 @@
+name: Construct a topic model of gender in science reports
+description: >
+   A template for creating new topic models of gender in science reports.
+create_dir: FALSE

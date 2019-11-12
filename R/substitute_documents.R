@@ -1,6 +1,9 @@
-#' Extract text from PDF files
+#' Substitute alternate versions of some documents
 #'
-#' Extract text from PDF files and save as VCorpus and/or in individual text files.
+#' This function copies alternate versions of documents specified in the
+#'   \code{replacement_scheme} from \code{replacements_dir} to
+#'   \code{corpus_dir}, overwriting the corresponding document files in
+#'   \code{corpus_dir}
 #' @param corpus_dir Directory containing documents in individual text files.
 #' @param replacements_dir Directory containing replacement documents.
 #' @param replacement_scheme A named character vector in which the names are the filenames (without extensions) of documents to be replaced, and the values are the filenames (without extensions) of documents to serve as replacements.

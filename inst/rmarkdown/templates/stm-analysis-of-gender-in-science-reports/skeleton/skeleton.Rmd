@@ -1,0 +1,306 @@
+---
+title: "Construct a topic model of gender in science reports"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+---
+
+This template includes all the code needed to construct a topic model of gender
+in science reports using the stm package, all the way from converting PDF files
+to text to producing output to help interpret the model. 
+
+Analysts must set the file paths and parameters listed in the section "Set file 
+paths and parameter" below, but then this document can be knitted with "Knit"
+button in RStudio and the entire analysis will be run.
+
+However, the full analysis does take a while to run, so you may want to split
+this code up into multiple files and run them in sequence in case you run into
+any bugs along the way.
+
+Also, note that this script creates folders and files in the working directory,
+so make sure your working directory is set to a good place to store the
+intermediate and results files for this analysis.
+
+# Attach required packages
+
+Install these with `install.packages()` (or `remotes::install_github()` in the 
+case of `gensci.stm`) if they are not already installed.
+
+```{r}
+library(gensci.stm)
+library(stringr)
+library(purrr)
+```
+
+
+# Set file paths and parameters
+
+## Path to Dropbox
+
+Set the path to Dropbox on your computer (assuming reports are stored in 
+Dropbox).
+
+```{r}
+path_to_dropbox <- ""
+```
+
+## Paths to PDF reports
+
+Set the paths to the directories containing the full reports and containing the 
+reports broken up into sections.
+
+```{r}
+full_reports_dir <- file.path(path_to_dropbox, "Data", 
+                              "All_Reports_Our_Sample_OCR_May_2016")
+report_sections_dir <- file.path(path_to_dropbox, "Data", "Sorted_report_pdfs")
+```
+
+## Paths to Adobe-converted text reports
+
+Set the path to the directory containing the reports converted to text by Adobe 
+Acrobat, which we discovered produces better quality conversions for some 
+reports, and list the names of reports for which to use the Adobe conversion.
+
+```{r}
+adobe_full_reports_dir <- file.path(
+  dropbox, 
+  "Data", 
+  "All_Reports_Our_Sample_Converted_to_Text", 
+  "Converted With Acrobat"
+)
+adobe_report_sections_dir <- file.path(dropbox, "Data", "Sorted_report_txts")
+adobe_reports <- c("NSF_2004", "UN_2000", "UN_2003", "US_2000", "US_2004", 
+                   "EC_1999a", "EC_2001", "NRC_1987", "NRC_2010")
+```
+
+## Paths at which to save intermediate outputs
+
+Set the names of the folders which will be created in your working directory to 
+store copies of the PDF report files and the files containing the text extracted 
+from the PDFs.
+
+```{r}
+corpus_pdf_dir <- "Latest Sample PDFs"
+corpus_txt_dir <- "Latest Sample TXT"
+```
+
+Set the name of the folder to be created in your working directory in which to
+store data on common n-grams.
+
+```{r}
+ngram_dir <- "Latest Sample Ngrams"
+```
+
+Set the name of the folders to be created inyour working directory in which to
+store the report content after removing repetitive "boilerplate" text, in which 
+to store the actual repetitive text removed (for reference), and in which to 
+store algorithmically-identified header and footer text removed from the 
+reports.
+
+```{r}
+boilerplate_removed_dir <- "Latest Sample Boilerplate Removed"
+boilerplate_dir <- "Boilerplate Removed from Latest Sample"
+hf_dir <- "Headers and Footers Removed from Latest Sample"
+```
+
+Set the name of the folders to be created inyour working directory in which to
+store the report content after removing named entities, and in which to store 
+the named entities removed (for reference).
+
+```{r}
+nes_removed_dir <- "Latest Sample NEs Removed"
+nes_dir <- "NEs Removed from Latest Sample"
+```
+
+Set the name of the file, to be saved in your working directory, that will 
+contain all necessary direct inputs for the STM topic model.
+
+```{r}
+stm_input_file <- "input_for_stm_nes_removed.Rdata"
+```
+
+
+## Analysis parameters
+
+Do you want to analyze the full reports, or just particular sections of the 
+reports? Options for this parameter are "full", "intro", "executive-summary", 
+"foreword-preface", and "conclusion".
+
+```{r}
+report_section <- "full"
+```
+
+Should the reports be split into 3,000 word sections, with each section treated 
+as its own document? This option will be ignored if `report_section` is not 
+set to "full".
+
+```{r}
+split_documents_into_chunks <- TRUE
+```
+
+Set the number of topics "k", and the name of the folder to be created in your
+working directory in which to store the model results.
+
+```{r}
+k <- 10
+results_dir <- paste0("gender-in-science-topic-model-", k, "-topics")
+```
+
+
+# Code that runs the analysis
+
+## Copy PDF files into subfolder of working directory
+
+```{r}
+report_section_patterns <- c(
+  "intro" = "_intro\\.(pdf|txt)$", 
+  "executive-summary" = "_exec\\.(pdf|txt)$",
+  "foreword-preface" = "_(fore|pref)\\.(pdf|txt)$",
+  "conclusion" = "_concl\\.(pdf|txt)$"
+)
+make_sure_dir(corpus_pdf_dir)
+if (report_section == "full") {
+  report_files <- list.files(full_reports_dir)
+  no_ref_files <- str_replace(report_files, "\\.pdf$", "_no_ref.pdf")
+  has_refs_removed_version <- no_ref_files %in% list.files(sorted_reports_dir)
+  
+  file.copy(
+    from = file.path(full_reports_dir, report_files[!has_refs_removed_version]), 
+    to = file.path(corpus_pdf_dir, report_files[!has_refs_removed_version])
+  )
+  file.copy(
+    from = file.path(sorted_reports_dir, no_ref_files[has_refs_removed_version]), 
+    to = file.path(corpus_pdf_dir, report_files[has_refs_removed_version])
+  )
+} else {
+  if (!report_section %in% names(report_section_patterns)) {
+    stop(
+      "Set the value of `report_section` to one of the following values: ", 
+      paste0('"', c("full", names(report_section_patterns)), '"', 
+             collapse = ", ")
+    )
+  }
+  focal_file_pattern <- report_section_patterns[report_section]
+  focal_files <- list.files(report_sections_dir, pattern = focal_file_pattern)
+  file.copy(
+    from = file.path(report_sections_dir, focal_files),
+    to = file.path(
+      corpus_pdf_dir, 
+      str_replace(focal_files, focal_file_pattern, ".pdf")
+    )
+  )
+}
+
+
+```
+
+## Extract text from PDFs
+
+```{r}
+extract_text_from_pdfs(corpus_pdf_dir, corpus_txt_dir, save_Rdata=FALSE, save_txt_files=TRUE, language="en")
+```
+
+
+## Substitute Adobe conversion for some reports
+
+```{r}
+if (report_section == "full") {
+  # If we have a version with the reference section removed, use it
+  has_refs_removed_version <- 
+    paste0(adobe_reports, "_no_ref.txt") %in% list.files(adobe_report_sections_dir)
+  adobe_no_ref_files <- sapply(adobe_reports[has_refs_removed_version], paste0, "_no_ref")
+  
+  substitute_documents(
+    corpus_txt_dir, 
+    adobe_report_sections_dir, 
+    replacement_scheme = adobe_no_ref_files
+  )
+  
+  # Otherwise use the full report
+  adobe_files <- sapply(adobe[!has_refs_removed_version], paste0)
+  substitute_documents(
+    corpus_txt_dir, 
+    full_reports_dir, 
+    replacement_scheme = adobe_files
+  )
+} else {
+  if (!report_section %in% names(report_section_patterns)) {
+    stop(
+      "Set the value of `report_section` to one of the following values: ", 
+      paste0('"', c("full", names(report_section_patterns)), '"', 
+             collapse = ", ")
+    )
+  }
+  focal_file_pattern <- report_section_patterns[report_section]
+  has_focal_section <- map_lgl(
+    paste0(adobe_reports, focal_file_pattern),
+    ~ any(str_detect(list.files(adobe_report_sections_dir), .))
+  )
+  focal_files <- map_chr(
+    paste0(adobe_reports[has_focal_section], focal_file_pattern),
+    ~ str_subset(list.files(adobe_report_sections_dir), .)
+  )
+  replacement_scheme <- set_names(
+    str_remove(focal_files, "\\.txt$"),
+    adobe_reports[has_focal_section]
+  )
+  substitute_documents(
+    corpus_txt_dir,
+    adobe_report_sections_dir,
+    replacement_scheme = replacement_scheme
+  )
+}
+```
+
+## Get ngrams to identify repetitive "boilerplate" text
+
+```{r}
+make_sure_dir(ngram_dir)
+get_ngrams(corpus_txt_dir, ngram_dir)
+```
+
+
+## Remove repetitive "boilerplate" text
+
+```{r}
+for(dir in c(boilerplate_removed_dir, boilerplate_dir, hf_dir)) make_sure_dir(dir)
+remove_boilerplate(corpus_txt_dir, ngram_dir, boilerplate_removed_dir, 
+                   boilerplate_dir, hf_dir)
+```
+
+## Remove state and country names
+
+```{r}
+remove_state_and_country_names(boilerplate_removed_dir, boilerplate_removed_dir)
+```
+
+## Remove named entities
+
+```{r}
+make_sure_dir(nes_removed_dir)
+make_sure_dir(nes_dir)
+remove_named_entities(boilerplate_removed_dir, nes_removed_dir, nes_dir)
+```
+
+## Create input objects for STM analysis
+
+```{r}
+if (report_section != "full") {
+  split_documents_into_chunks <- FALSE
+}
+create_stm_input(
+  nes_removed_dir, 
+  stm_input_file, 
+  split_docs = split_documents_into_chunks
+)
+```
+
+## Run STM analysis
+
+```{r}
+make_sure_dir(results_dir)
+run_stm(stm_input_file, results_dir, k, split_docs = split_documents_into_chunks)
+```
+
