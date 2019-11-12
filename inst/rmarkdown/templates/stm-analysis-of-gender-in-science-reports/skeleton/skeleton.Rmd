@@ -218,23 +218,23 @@ if (exclude_un) {
   } else if (report_section == "intro") {
     UN_files <- UN_meta %>% 
       filter(!is.na(Introduction)) %>% 
-      pull(Introduction)
+      pull(New.Names.for.Pdfs)
   } else if (report_section == "executive-summary") {
     UN_files <- UN_meta %>% 
       filter(!is.na(Executive.Summary)) %>% 
-      pull(Executive.Summary)
+      pull(New.Names.for.Pdfs)
   } else if (report_section == "foreword-preface") {
     foreword_files <- UN_meta %>% 
       filter(!is.na(Foreword)) %>% 
-      pull(Foreword)
+      pull(New.Names.for.Pdfs)
     preface_files <- UN_meta %>% 
       filter(!is.na(Preface)) %>% 
-      pull(Preface)
-    UN_files <- c(foreword_files, preface_files)
+      pull(New.Names.for.Pdfs)
+    UN_files <- unique(c(foreword_files, preface_files))
   } else if (report_section == "conclusion") {
     UN_files <- UN_meta %>% 
       filter(!is.na(Conclusion)) %>% 
-      pull(Conclusion)
+      pull(New.Names.for.Pdfs)
   }
   
   remove_results <- file.remove(
