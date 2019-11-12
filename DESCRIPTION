@@ -1,0 +1,21 @@
+Package: gensci.stm
+Title: Functions to prepare gender and science reports for analysis with STM,
+    and to run that analysis
+Version: 0.0.0.9000
+Authors@R: person("Derek", "Burk", email = "dtb557@gmail.com", role = c("aut", "cre"))
+Description: 
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+VignetteBuilder: knitr
+RoxygenNote: 6.0.1
+Imports: 
+    data.table,
+    stringr,
+    tm,
+    texanaaid,
+    stm,
+    SnowballC,
+    ngram,
+    knitr,
+    rmarkdown

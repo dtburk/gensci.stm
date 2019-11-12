@@ -1,0 +1,85 @@
+---
+title: "Preparing and running STM on gender and science reports with the gensci.stm package"
+author: "Derek Burk"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Usage Overview}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Below is the sequence of commands used to prepare our set of gender and science reports for analysis, and to analyze the reports using STM.
+
+```{r eval=FALSE}
+library(gensci.stm)
+library(stringr)
+setwd("C:/Users/Derek/OneDrive/@Work/Kathrin Zippel/Gender and Science Reports")
+dropbox <- file.path("C:", "Users", "Derek", "Dropbox", "0_TARGET")
+corpus_pdf_dir <- "Latest Sample PDFs"
+corpus_txt_dir <- "Latest Sample TXT"
+
+# Put PDFs of reports to analyze into one directory
+make_sure_dir(corpus_pdf_dir)
+full_reports_dir <- file.path(dropbox, "Data", "All_Reports_Our_Sample_OCR_May_2016")
+sorted_reports_dir <- file.path(dropbox, "Data", "Sorted_report_pdfs")
+report_files <- list.files(full_reports_dir)
+no_ref_files <- str_replace(report_files, "\\.pdf$", "_no_ref.pdf")
+has_refs_removed_version <- no_ref_files %in% list.files(sorted_reports_dir)
+file.copy(from=file.path(full_reports_dir, report_files[!has_refs_removed_version]), 
+          to=file.path(corpus_pdf_dir, report_files[!has_refs_removed_version]))
+file.copy(from=file.path(sorted_reports_dir, no_ref_files[has_refs_removed_version]), 
+          to=file.path(corpus_pdf_dir, report_files[has_refs_removed_version]))
+
+# Extract text from PDFs in corpus_pdf_dir
+extract_text_from_pdfs(corpus_pdf_dir, corpus_txt_dir, save_Rdata=FALSE, save_txt_files=TRUE, language="en")
+
+# Substitute the Adobe-Acrobat-created text files for some documents
+adobe <- c("NSF_2004", "UN_2000", "UN_2003", "US_2000", "US_2004", 
+                 "EC_1999a", "EC_2001", "NRC_1987", "NRC_2010")
+full_reports_dir <- file.path(dropbox, "Data", "All_Reports_Our_Sample_Converted_to_Text", 
+                                                  "Converted With Acrobat")
+sorted_reports_dir <- file.path(dropbox, "Data", "Sorted_report_txts")
+has_refs_removed_version <- paste0(adobe, "_no_ref.txt") %in% 
+    list.files(sorted_reports_dir)
+adobe_no_ref_files <- sapply(adobe[has_refs_removed_version], paste0, "_no_ref")
+
+substitute_documents(corpus_txt_dir, sorted_reports_dir, 
+                     replacement_scheme=adobe_no_ref_files)
+adobe_files <- sapply(adobe[!has_refs_removed_version], paste0)
+substitute_documents(corpus_txt_dir, full_reports_dir, 
+                     replacement_scheme=adobe_files)
+
+# Get ngrams for boilerplate text removal
+ngram_dir <- "Latest Sample Ngrams"
+make_sure_dir(ngram_dir)
+get_ngrams(corpus_txt_dir, ngram_dir)
+
+# Remove boilerplate text
+boilerplate_removed_dir <- "Latest Sample Boilerplate Removed"
+boilerplate_dir <- "Boilerplate Removed from Latest Sample"
+hf_dir <- "Headers and Footers Removed from Latest Sample"
+for(dir in c(boilerplate_removed_dir, boilerplate_dir, hf_dir)) make_sure_dir(dir)
+remove_boilerplate(corpus_txt_dir, ngram_dir, boilerplate_removed_dir, 
+                   boilerplate_dir, hf_dir)
+
+# Remove state and country names
+remove_state_and_country_names(boilerplate_removed_dir, boilerplate_removed_dir)
+
+# Remove named entities
+nes_removed_dir <- "Latest Sample NEs Removed"
+nes_dir <- "NEs Removed from Latest Sample"
+make_sure_dir(nes_removed_dir)
+make_sure_dir(nes_dir)
+remove_named_entities(boilerplate_removed_dir, nes_removed_dir, nes_dir)
+
+# Create input objects for STM analysis
+stm_input_file <- "input_for_stm_nes_removed.Rdata"
+create_stm_input(nes_removed_dir, stm_input_file, 
+                 split_docs=TRUE)
+
+# Run STM analysis
+k <- 15
+results_dir <- sprintf("gensci%d_nes_removed", k)
+run_stm(stm_input_file, results_dir, k, split_docs=TRUE)
+```
