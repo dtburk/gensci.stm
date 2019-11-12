@@ -18,7 +18,7 @@ create_stm_input <- function(input_dir, output_file, bounds=c(2, Inf),
         return(x)
     }))
 
-    titles <- sapply(all_reports, meta, "id", USE.NAMES=FALSE)
+    titles <- sapply(all_reports, tm::meta, "id", USE.NAMES=FALSE)
 
     # Rename gensci_meta as d
     d <- gensci_meta
