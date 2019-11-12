@@ -1,9 +1,12 @@
 library(data.table)
-library(xlsx)
+library(readxl)
 
 gensci_meta <- data.table(
-    read.xlsx("C:/Users/Derek/Dropbox/0_TARGET/Topic_Modeling_Master_Sheet_Feb_10_2017.xlsx", 1)
+    read_xlsx(
+      "data-raw/Topic_Modeling_Master_Sheet_Feb_10_2017.xlsx",
+      .name_repair = "universal"
+    )
 )
 
 write.csv(gensci_meta, file="data-raw/gensci_meta.csv", row.names=FALSE)
-devtools::use_data(gensci_meta)
+usethis::use_data(gensci_meta, overwrite = TRUE)
