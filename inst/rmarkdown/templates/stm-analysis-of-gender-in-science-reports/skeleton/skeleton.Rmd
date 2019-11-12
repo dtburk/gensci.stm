@@ -368,7 +368,7 @@ make_sure_dir(results_dir)
 run_stm(stm_input_file, results_dir, k, split_docs = split_documents_into_chunks)
 ```
 
-## Produce summary PDF and topic network graph
+## Produce summary PDF
 
 ```{r}
 make_pdf_summary_report(
@@ -377,7 +377,5 @@ make_pdf_summary_report(
   pdf_summary_title, 
   geogs = c("EU", "US", if (!exclude_un) "UN")
 )
-
-make_topic_network_graph(results_dir, stm_input_file)
 ```
 
