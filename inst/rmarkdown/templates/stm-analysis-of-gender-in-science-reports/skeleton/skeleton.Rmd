@@ -158,6 +158,18 @@ k <- 10
 results_dir <- paste0("gender-in-science-topic-model-", k, "-topics")
 ```
 
+Set the title of the PDF summary report file, to be saved in `results_dir`.
+
+```{r}
+pdf_summary_title <- if (report_section == "full") {
+  paste0("Summary Report, Full Reports, ", k, " Topics")
+} else {
+  paste0("Summary Report, ", str_to_title(report_section), " Sections, ", k, 
+         " Topics")
+}
+```
+
+
 
 # Code that runs the analysis
 
@@ -353,5 +365,18 @@ create_stm_input(
 ```{r}
 make_sure_dir(results_dir)
 run_stm(stm_input_file, results_dir, k, split_docs = split_documents_into_chunks)
+```
+
+## Produce summary PDF and topic network graph
+
+```{r}
+make_pdf_summary_report(
+  stm_input_file, 
+  results_dir, 
+  pdf_summary_title, 
+  geogs = c("EU", "US", if (!exclude_un) "UN")
+)
+
+make_topic_network_graph(results_dir, stm_input_file)
 ```
 
