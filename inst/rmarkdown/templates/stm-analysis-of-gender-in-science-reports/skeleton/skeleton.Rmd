@@ -12,7 +12,7 @@ in science reports using the stm package, all the way from converting PDF files
 to text to producing output to help interpret the model. 
 
 Analysts must set the file paths and parameters listed in the section "Set file 
-paths and parameter" below, but then this document can be knitted with "Knit"
+paths and parameters" below, but then this document can be knitted with "Knit"
 button in RStudio and the entire analysis will be run.
 
 However, the full analysis does take a while to run, so you may want to split
