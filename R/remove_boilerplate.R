@@ -80,7 +80,7 @@ remove_boilerplate <- function(input_dir, ngram_dir, output_dir, rep_text_dir,
         # Get ngrams with n 2-40
         flagged <- matrix(nrow=0, ncol=2)
         for(i in 2:40) {
-            if(wordcount(header_footer_text) >= i) {
+            if(ngram::wordcount(header_footer_text) >= i) {
                 ngram_tab <- ngram::get.phrasetable(ngram(header_footer_text, n=i))
                 # Flag any ngram that appears in more than max(n_pages/4, 5) pages
                 flagged <- rbind(flagged, ngram_tab[ngram_tab$freq > max((n_pages/4), 5), c("ngrams", "freq")])
