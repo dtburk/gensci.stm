@@ -184,13 +184,17 @@ if (report_section == "full") {
   }
   focal_file_pattern <- report_section_patterns[report_section]
   focal_files <- list.files(report_sections_dir, pattern = focal_file_pattern)
-  file.copy(
+  copy_results <- file.copy(
     from = file.path(report_sections_dir, focal_files),
     to = file.path(
       corpus_pdf_dir, 
       str_replace(focal_files, focal_file_pattern, ".pdf")
     )
   )
+  if (!all(copy_results)) {
+    stop("Problem copying PDF files; make sure all paths are specified ", 
+         "correctly and that files do not already exist in destination")
+  }
 }
 
 
