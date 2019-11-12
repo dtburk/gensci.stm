@@ -18,7 +18,7 @@ create_stm_input <- function(input_dir, output_file, bounds=c(2, Inf),
         return(x)
     }))
 
-    titles <- sapply(all_reports, tm::meta, "id", USE.NAMES=FALSE)
+    titles <- sapply(all_reports, tm:::meta.VCorpus, "id", USE.NAMES=FALSE)
 
     # Rename gensci_meta as d
     d <- gensci_meta
@@ -101,12 +101,12 @@ create_stm_input <- function(input_dir, output_file, bounds=c(2, Inf),
         }
 
         all <- tm::as.VCorpus(all_pages)
-        raw_reports <- sapply(all, content)
+        raw_reports <- sapply(all, tm:::content.VCorpus)
         d <- data.table(title=all_pages_titles, year=all_pages_years, geog=factor(all_pages_geog),
                                          report=factor(all_pages_report))
         rm(all_pages, all_pages_titles, all_pages_years, all_pages_geog, all_pages_report)
     } else {
-        raw_reports <- sapply(all, content)
+        raw_reports <- sapply(all, tm:::content.VCorpus)
         d <- d[ , .(title=Title, year=Year, geog=US.EU.UN)]
     }
 
@@ -119,7 +119,7 @@ create_stm_input <- function(input_dir, output_file, bounds=c(2, Inf),
     all <- tm::tm_map(all, tm::content_transformer(function(x) tolower(x)))
 
     ## Remove Numbers
-    all <- tm::tm_map(all, removeNumbers)
+    all <- tm::tm_map(all, tm::removeNumbers)
 
     # Remove punctuation
     all <- tm::tm_map(all, tm::content_transformer(function(x) texanaaid::remove_punctuation(x)))
