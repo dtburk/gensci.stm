@@ -2,6 +2,7 @@
 
 export(british_to_american_spellings)
 export(create_stm_input)
+export(data.table)
 export(extract_text_from_pdfs)
 export(get_ngrams)
 export(make_sure_dir)
@@ -10,3 +11,4 @@ export(remove_named_entities)
 export(remove_state_and_country_names)
 export(run_stm)
 export(substitute_documents)
+import(data.table)
