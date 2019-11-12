@@ -65,12 +65,12 @@ reports, and list the names of reports for which to use the Adobe conversion.
 
 ```{r}
 adobe_full_reports_dir <- file.path(
-  dropbox, 
+  path_to_dropbox, 
   "Data", 
   "All_Reports_Our_Sample_Converted_to_Text", 
   "Converted With Acrobat"
 )
-adobe_report_sections_dir <- file.path(dropbox, "Data", "Sorted_report_txts")
+adobe_report_sections_dir <- file.path(path_to_dropbox, "Data", "Sorted_report_txts")
 adobe_reports <- c("NSF_2004", "UN_2000", "UN_2003", "US_2000", "US_2004", 
                    "EC_1999a", "EC_2001", "NRC_1987", "NRC_2010")
 ```
