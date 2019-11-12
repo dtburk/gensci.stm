@@ -32,6 +32,7 @@ case of `gensci.stm`) if they are not already installed.
 library(gensci.stm)
 library(stringr)
 library(purrr)
+library(dplyr)
 ```
 
 
@@ -126,11 +127,20 @@ stm_input_file <- "input_for_stm_nes_removed.Rdata"
 
 Do you want to analyze the full reports, or just particular sections of the 
 reports? Options for this parameter are "full", "intro", "executive-summary", 
-"foreword-preface", and "conclusion".
+"foreword-preface", and "conclusion". Note that for option "foreword-preface", 
+only the preface will be included for reports that have both a foreword and a 
+preface.
 
 ```{r}
 report_section <- "full"
 ```
+
+Should UN reports be excluded?
+
+```{r}
+exclude_un <- TRUE
+```
+
 
 Should the reports be split into 3,000 word sections, with each section treated 
 as its own document? This option will be ignored if `report_section` is not 
@@ -197,6 +207,40 @@ if (report_section == "full") {
   }
 }
 
+if (exclude_un) {
+  # Remove the UN reports
+  UN_meta <- gensci_meta %>% 
+      filter(US.EU.UN == "INT")
+  adobe_reports <- setdiff(adobe_reports, UN_meta$New.Names.for.Pdfs)
+  if (report_section == "full") {
+    UN_files <- UN_meta %>% 
+      pull(New.Names.for.Pdfs)
+  } else if (report_section == "intro") {
+    UN_files <- UN_meta %>% 
+      filter(!is.na(Introduction)) %>% 
+      pull(Introduction)
+  } else if (report_section == "executive-summary") {
+    UN_files <- UN_meta %>% 
+      filter(!is.na(Executive.Summary)) %>% 
+      pull(Executive.Summary)
+  } else if (report_section == "foreword-preface") {
+    foreword_files <- UN_meta %>% 
+      filter(!is.na(Foreword)) %>% 
+      pull(Foreword)
+    preface_files <- UN_meta %>% 
+      filter(!is.na(Preface)) %>% 
+      pull(Preface)
+    UN_files <- c(foreword_files, preface_files)
+  } else if (report_section == "conclusion") {
+    UN_files <- UN_meta %>% 
+      filter(!is.na(Conclusion)) %>% 
+      pull(Conclusion)
+  }
+  
+  remove_results <- file.remove(
+    file.path(corpus_pdf_dir, paste0(UN_files, ".pdf"))
+  )
+}
 
 ```
 
