@@ -36,7 +36,7 @@ repository](https://github.com/dtburk/texanaaid).
 This package includes an R Markdown template that lays out all the steps
 needed to generate a topic model. To use this template, first make sure
 you have installed the package, then in RStudio, navigate to File \> New
-File \> R Markdown…, click on “From Template” on the left side of dialog
+File \> R Markdown…, click on “From Template” on the left side of the dialog
 box, select “Construct a topic model of gender in science reports”, and
 click OK.
 
