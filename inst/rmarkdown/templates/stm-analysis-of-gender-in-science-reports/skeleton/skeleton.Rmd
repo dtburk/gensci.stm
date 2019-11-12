@@ -250,11 +250,14 @@ if (report_section == "full") {
     str_remove(focal_files, "\\.txt$"),
     adobe_reports[has_focal_section]
   )
-  substitute_documents(
+  substitution_results <- substitute_documents(
     corpus_txt_dir,
     adobe_report_sections_dir,
     replacement_scheme = replacement_scheme
   )
+  if (!all(substitution_results)) {
+    stop("Problem substituting documents")
+  }
 }
 ```
 

@@ -37,7 +37,7 @@ get_ngrams <- function(input_dir, ngram_dir, language="en") {
         word_count <- stringr::str_count(txt, "\\S+")
         for(i in 8:min(100, word_count)) {
             cat(sprintf("%d ", i))
-            ngram_tab <- ngram::get.phrasetable(ngram(txt, n=i))
+            ngram_tab <- ngram::get.phrasetable(ngram::ngram(txt, n=i))
             ngram_tab <- ngram_tab[ngram_tab$freq > 1, ]
             ngram_tabs[[paste0(i, "-grams")]] <- ngram_tab
         }
